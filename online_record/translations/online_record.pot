@@ -1,0 +1,217 @@
+# $Id$
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  online_record.admin.php: n/a
+#  online_record.pages.php: n/a
+#  online_record.views_default.inc: n/a
+#  online_record.module: n/a
+#  online_record.install: n/a
+#  online_record.info: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2015-02-04 16:23+0300\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: online_record.admin.php:36
+msgid "Default work hours."
+msgstr ""
+
+#: online_record.admin.php:54
+msgid "Day settings %day."
+msgstr ""
+
+#: online_record.admin.php:82
+msgid "Working by default"
+msgstr ""
+
+#: online_record.admin.php:88
+msgid "Default minutes for one task"
+msgstr ""
+
+#: online_record.admin.php:129
+msgid "Enable or disable day %day"
+msgstr ""
+
+#: online_record.admin.php:133
+msgid "Incorrect day name. Day number %num value:%val. Need set to %need"
+msgstr ""
+
+#: online_record.admin.php:140
+msgid "Long interval, 11 symbols maximum. Example 11:30-14:00"
+msgstr ""
+
+#: online_record.admin.php:145
+msgid "Interval must consist of two parts. Example 8:00-10:00"
+msgstr ""
+
+#: online_record.admin.php:150
+msgid "Value of hours must be in interval between 0-24"
+msgstr ""
+
+#: online_record.admin.php:153
+msgid "Value of minutes must be in interval between 0-59"
+msgstr ""
+
+#: online_record.pages.php:11
+msgid "Change a specialist"
+msgstr ""
+
+#: online_record.views_default.inc:66
+msgid "Master"
+msgstr ""
+
+#: online_record.views_default.inc:67
+msgid "more"
+msgstr ""
+
+#: online_record.views_default.inc:68
+msgid "Apply"
+msgstr ""
+
+#: online_record.views_default.inc:69
+msgid "Reset"
+msgstr ""
+
+#: online_record.views_default.inc:70
+msgid "Sort by"
+msgstr ""
+
+#: online_record.views_default.inc:71
+msgid "Asc"
+msgstr ""
+
+#: online_record.views_default.inc:72
+msgid "Desc"
+msgstr ""
+
+#: online_record.views_default.inc:73
+msgid "Items per page"
+msgstr ""
+
+#: online_record.views_default.inc:74
+msgid "- All -"
+msgstr ""
+
+#: online_record.views_default.inc:75
+msgid "Offset"
+msgstr ""
+
+#: online_record.views_default.inc:76
+msgid "« first"
+msgstr ""
+
+#: online_record.views_default.inc:77
+msgid "‹ previous"
+msgstr ""
+
+#: online_record.views_default.inc:78
+msgid "next ›"
+msgstr ""
+
+#: online_record.views_default.inc:79
+msgid "last »"
+msgstr ""
+
+#: online_record.views_default.inc:80
+msgid "Entity Reference"
+msgstr ""
+
+#: online_record.module:53
+msgid "Please, verify and save your default settings."
+msgstr ""
+
+#: online_record.module:84
+msgid "Workday"
+msgstr ""
+
+#: online_record.module:87
+msgid "Time settings"
+msgstr ""
+
+#: online_record.module:104
+msgid "Record №!ord"
+msgstr ""
+
+#: online_record.module:130
+msgid "This specialist is not active now. Please, select any other specialist."
+msgstr ""
+
+#: online_record.module:159
+msgid "This time is busy"
+msgstr ""
+
+#: online_record.module:177 online_record.install:231
+msgid "Date of visit"
+msgstr ""
+
+#: online_record.module:181 online_record.install:39
+msgid "Opening hours"
+msgstr ""
+
+#: online_record.module:214 online_record.install:96
+msgid "Working"
+msgstr ""
+
+#: online_record.module:217
+msgid "Not working"
+msgstr ""
+
+#: online_record.module:220
+msgid "Hours of work %t"
+msgstr ""
+
+#: online_record.module:14
+msgid "Online records settings"
+msgstr ""
+
+#: online_record.module:15
+msgid "Default settings for specialists."
+msgstr ""
+
+#: online_record.install:8;176
+msgid "Specialist"
+msgstr ""
+
+#: online_record.install:10
+msgid "Specialist description"
+msgstr ""
+
+#: online_record.install:63
+msgid "Minutes of deal"
+msgstr ""
+
+#: online_record.install:115
+msgid "Record"
+msgstr ""
+
+#: online_record.install:117
+msgid "Record description"
+msgstr ""
+
+#: online_record.install:196
+msgid "Count of tasks"
+msgstr ""
+
+#: online_record.info:0
+msgid "Online record"
+msgstr ""
+
+#: online_record.info:0
+msgid "Online records for specialists."
+msgstr ""
+
+#: online_record.info:0
+msgid "Records"
+msgstr ""
+

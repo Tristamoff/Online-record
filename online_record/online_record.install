@@ -1,0 +1,244 @@
+<?php
+
+
+function online_record_install() {
+  //создание специалиста
+  $specialist_type = array(
+    'type' => 'or_specialist',
+    'name' => t('Specialist'),
+    'base' => 'node_content',
+    'description' => t('Specialist description'),
+    'custom' => TRUE,
+    'modified' => TRUE,
+  );
+  $specialist_type = node_type_set_defaults($specialist_type);
+  node_add_body_field($specialist_type);
+  node_type_save($specialist_type);
+
+  $ins = field_info_instance('node', 'body', 'or_specialist');
+  field_update_instance($ins);
+
+  /**
+   * Часы работы специалиста
+   * Формат:
+   * YES-NO(работает или нет)|начало-конец рабочего дня|начало-конец обеда
+   * Таких полей будет 8. На дни недели и праздники.
+   */
+  field_create_field(
+    array(
+      'field_name' => 'or_opening_hours',
+      'cardinality' => 8,
+      'type' => 'text',
+    )
+  );
+  field_create_instance(
+    array(
+      'entity_type' => 'node',
+      'bundle' => 'or_specialist',
+      'field_name' => 'or_opening_hours',
+      'label' => t('Opening hours'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      )
+    )
+  );
+
+  // Минут на дело
+  field_create_field(
+    array(
+      'field_name' => 'or_minute_deal',
+      'cardinality' => 1,
+      'type' => 'number_integer',
+    )
+  );
+  field_create_instance(
+    array(
+      'entity_type' => 'node',
+      'bundle' => 'or_specialist',
+      'field_name' => 'or_minute_deal',
+      'label' => t('Minutes of deal'),
+      'widget' => array('type' => 'number_integer'),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ),
+      'default' => 15,
+      'required' => 1,
+      'settings' => array(
+        'min' => 1,
+        'max' => 10000
+      ),
+    )
+  );
+
+  // Работает или нет
+  field_create_field(
+    array(
+      'field_name' => 'or_is_working',
+      'cardinality' => 1,
+      'type' => 'list_boolean',
+      'settings' => array(
+        'allowed_values' => array('Not working', 'Working')
+      ),
+    )
+  );
+  field_create_instance(
+    array(
+      'entity_type' => 'node',
+      'bundle' => 'or_specialist',
+      'field_name' => 'or_is_working',
+      'label' => t('Working'),
+      'widget' => array('type' => 'options_onoff'),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'list_default',
+        ),
+      ),
+      'default' => 1,
+      'settings' => array(
+        'display_label' => 0
+      ),
+    )
+  );
+
+
+  // Создание заявки
+  $record_type = array(
+    'type' => 'or_record',
+    'name' => t('Record'),
+    'base' => 'node_content',
+    'description' => t('Record description'),
+    'custom' => TRUE,
+    'modified' => TRUE,
+  );
+  $record_type = node_type_set_defaults($record_type);
+  node_add_body_field($record_type);
+  node_type_save($record_type);
+
+  $ins = field_info_instance('node', 'body', 'or_record');
+  field_update_instance($ins);
+
+  // Специалист
+  field_create_field(
+    array(
+      'field_name' => 'or_specialist',
+      'cardinality' => 1,
+      'type' => 'entityreference',
+      'settings' => array(
+        'target_type' => 'node',
+        'handler' => 'views',
+        'handler_settings' => array(
+          'view' => array(
+            'view_name' => 'enabled_specialists',
+            'display_name' => 'entityreference_1',
+            'args' => array()
+          ),
+          'behaviors' => array(
+            'views-select-list' => array(
+              'status' => 0
+            )
+          ),
+        ),
+      ),
+/*
+      'settings' => array(
+        'target_type' => 'node',
+        'handler' => 'base',
+        'handler_settings' => array(
+          'target_bundles' => array('or_specialist'),
+          'sort' => array(
+            'type' => 'property',
+            'property' => 'title',
+            'direction' => 'ASC'
+          ),
+          'behaviors' => array(
+            'views-select-list' => array(
+              'status' => 0
+            )
+          ),
+        ),
+      ),
+      */
+    )
+  );
+  field_create_instance(
+    array(
+      'entity_type' => 'node',
+      'bundle' => 'or_record',
+      'field_name' => 'or_specialist',
+      'label' => t('Specialist'),
+      'widget' => array('type' => 'options_select'),
+      'required' => 1,
+    )
+  );
+
+
+  //количество дел
+  field_create_field(
+    array(
+      'field_name' => 'or_tasks_count',
+      'cardinality' => 1,
+      'type' => 'number_integer',
+    )
+  );
+  field_create_instance(
+    array(
+      'entity_type' => 'node',
+      'bundle' => 'or_record',
+      'field_name' => 'or_tasks_count',
+      'label' => t('Count of tasks'),
+      'widget' => array('type' => 'number_integer'),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ),
+      'default_value' => array(
+        array(
+          'value' => 1
+        )
+      ),
+      'required' => 1,
+      'settings' => array(
+        'min' => 1,
+        'max' => 10000
+      ),
+    )
+  );
+
+
+  //Дата и время
+  field_create_field(
+    array(
+      'field_name' => 'or_date',
+      'cardinality' => 1,
+      'type' => 'text',
+    )
+  );
+  field_create_instance(
+    array(
+      'entity_type' => 'node',
+      'bundle' => 'or_record',
+      'field_name' => 'or_date',
+      'label' => t('Date of visit'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ),
+      'required' => 1,
+    )
+  );
+
+
+}

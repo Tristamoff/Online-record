@@ -1,0 +1,226 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: rusakov
+ * Date: 30.01.15
+ * Time: 15:29
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function online_record_menu() {
+  $items['admin/config/content/online_record'] = array(
+    'title' => 'Online records settings',
+    'description' => 'Default settings for specialists.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('online_record_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'online_record.admin.php'
+  );
+
+  $items['online_record/get_dates/%/%/%'] = array(
+    'page callback' => 'online_record_get_days',
+    'page arguments' => array(2, 3, 4),//nid спеца, nid записи, step
+    'access callback' => TRUE,
+    'file' => 'online_record.pages.php',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['online_record/get_step_by_date/%'] = array(
+    'page callback' => 'online_record_get_step_by_date',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'file' => 'online_record.pages.php',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+
+/**
+ *  Implements hook_form_alter().
+ */
+function online_record_form_alter(&$form, &$form_state, $form_id) {
+  //форма добавления/редактирования специалиста
+  if ($form_id == 'or_specialist_node_form') {
+    //только добавление
+    if(is_null($form['nid']['#value'])) {
+      $default_settings = variable_get('or_default_settings', array());
+	  if($default_settings == array()) {
+		drupal_set_message(t('Please, verify and save your default settings.'));
+		drupal_goto('admin/config/content/online_record');
+	  }
+      if (isset($default_settings['or_def_working'])) {
+        $form['or_is_working']['und']['#default_value'] = (bool) $default_settings['or_def_working'];
+      }
+      if (isset($default_settings['or_def_minutes'])) {
+        $form['or_minute_deal']['und'][0]['value']['#default_value'] = (int) $default_settings['or_def_minutes'];
+      }
+      if (isset($default_settings['clocks'])) {
+        foreach ($default_settings['clocks'] as $i => $time) {
+          $form['or_opening_hours']['und'][$i]['value']['#default_value'] = $time;
+        }
+      }
+    }
+    //добавление/редактирование
+    $form['#attached']['js'] = array(
+      drupal_get_path('module', 'online_record') . '/theme/admin_settings.js',
+    );
+    $form['#attached']['css'] = array(
+      drupal_get_path('module', 'online_record') . '/theme/admin_settings.css',
+    );
+    $i = 0;
+    while ($i < 8) {
+      $def = $form['or_opening_hours']['und'][$i]['value']['#default_value'];
+      $def_arr = explode('|', $def);//t('Day settings %day.', array('%day' => t($def_arr[1])))
+      $suffix = '
+<fieldset data-day-name="' . t($def_arr[1]) . '" data-day-index="' . $i . '">
+<legend><span class="fieldset-legend">' . t($def_arr[1]) . '</span></legend>
+<div class="form-item form-type-checkbox form-item-work-0">
+  <input class="work-enable form-checkbox" data-day-index="' . $i . '" type="checkbox" id="edit-work-' . $i . '" />
+  <label class="option" for="edit-work-' . $i . '">' . t('Workday') . ' </label>
+</div>
+<div class="form-item form-type-textfield form-item-times-0">
+  <label for="edit-times-0">' . t('Time settings') . ' </label>
+  <input class="work-time form-text" data-day-index="' . $i . '" type="text" id="edit-times-' . $i . '" name="times_' . $i . '" value="" size="60" maxlength="128">
+</div>
+</fieldset>
+      ';
+      $form['or_opening_hours']['und'][$i]['value']['#suffix'] = $suffix;
+      $form['or_opening_hours']['und'][$i]['value']['#attributes']['class'][] = 'real-data';
+      $form['or_opening_hours']['und'][$i]['value']['#attributes']['data-day'] = $i;
+      $i++;
+    }
+  }
+
+  //Форма создания/редактирования заявки
+  if ($form_id == 'or_record_node_form') {
+    // Title for new record
+    if(is_null($form['nid']['#value'])) {
+      $res = db_select('node', 'n')->fields('n', array('nid'))->condition('n.type', 'or_record')->orderBy('n.nid', 'DESC')->range(0, 1)->execute()->fetchField();
+      $form['title']['#default_value'] = t('Record №!ord', array('!ord' => (int)$res));
+    }
+
+    $form['#attached']['js'] = array(
+      drupal_get_path('module', 'online_record') . '/theme/calendar.js',
+    );
+    $form['#attached']['css'] = array(
+      drupal_get_path('module', 'online_record') . '/theme/calendar.css',
+    );
+    $form['or_date']['#suffix'] = '<div id="for-calendar" data-plus="0" data-nid="' . (int) $form['nid']['#value'] . '"></div>';
+    $form['or_tasks_count']['#suffix'] = '<div id="task-count-info"></div>';
+    $form['#validate'][] = 'online_record_validate_free_intervals';
+  }
+}
+
+/**
+ * Проверка-можно ли записаться на выбранную дату и время.
+ */
+function online_record_validate_free_intervals($form, &$form_state){
+  $specialist_nid = $form_state['values']['or_specialist']['und'][0]['target_id'];
+  $q = db_select('node', 'n')
+    ->condition('n.nid', $specialist_nid)
+    ->fields('n', array('status'))
+    ->execute()
+    ->fetchField();
+  if ($q == 0) {
+    form_set_error('or_specialist', t('This specialist is not active now. Please, select any other specialist.'));
+  }
+  $date = explode('_', $form_state['values']['or_date']['und'][0]['value']);
+  $time = $date[0];
+  $int = explode('-', $date[1]);
+  $int_st = (int) $int[0];
+  $int_end = (int) $int[1];
+
+  $q = db_select('field_revision_or_date', 'od');
+  $q->condition('od.or_date_value', db_like($time) . '%', 'LIKE');
+  $q->rightJoin('node', 'n', 'n.vid=od.revision_id');
+  $q->leftJoin('field_revision_or_specialist', 'os', 'os.revision_id=n.vid');
+  $q->condition('os.or_specialist_target_id', $specialist_nid);
+  $q->fields('od', array('or_date_value'));
+  $result = $q->execute();
+  while ($r = $result->fetchAssoc()) {
+    $record_arr = explode('_', $r['or_date_value']);
+    $bord_arr = explode('-', $record_arr[1]);
+    $busy_ints[0] = (int) $bord_arr[0];
+    $busy_ints[1] = (int) $bord_arr[1];
+    if(
+      (($int_st < $busy_ints[0]) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало интервала в свободное время, конец в занятом
+      ||
+      (($int_end > $busy_ints[1]) && (($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])))//начало в занятом участке. конец в свободном
+      ||
+      ((($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало и конец внутри занятого участка
+      ||
+      (($int_st <= $busy_ints[0]) && ($int_end >= $busy_ints[1])) //занятый участок внутри интервала
+    ) {
+      form_set_error('or_date', t('This time is busy'));
+    }
+  }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function online_record_views_api() {
+  return array('api' => 3.0);
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function online_record_field_formatter_info() {
+  return array(
+    'online_record_date_of_visit' => array(
+      'label' => t('Date of visit'),
+      'field types' => array('text'),
+    ),
+    'online_record_opening_hours' => array(
+      'label' => t('Opening hours'),
+      'field types' => array('text'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function online_record_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array(); // Initialize the var
+  if ($field['field_name'] == 'or_date') {
+    $arr = explode('_', $items[0]['value']);
+    $date = explode('-', $arr[0]);
+    $date = array_reverse($date);
+    $date = implode('.', $date);//!
+    $times = explode('-', $arr[1]);
+
+    $st_min = ((int) $times[0]) % 60;
+    $st_hr = ((int) $times[0] - $st_min) / 60;
+    if ($st_min == 0) {$st_min = '00';}
+
+    $end_min = ((int) $times[1]) % 60;
+    $end_hr = ((int) $times[1] - $end_min) / 60;
+    if ($end_min == 0) {$end_min = '00';}
+    $element[0]['#markup'] = $date . ' ' . $st_hr . ':' . $st_min . '-' . $end_hr . ':' . $end_min;
+  }
+  elseif ($field['field_name'] == 'or_opening_hours') {
+    foreach ($items as $i => $day) {
+      $arr = explode('|', $day['value']);
+      $element[$i]['#markup'] = '<div class="or-op-h-disp">';
+      $element[$i]['#markup'] .= t($arr[1]) . ':';
+      if ($arr[0] == 'YES') {
+        $element[$i]['#markup'] .= t('Working');
+      }
+      else {
+        $element[$i]['#markup'] .= t('Not working');
+      }
+      $element[$i]['#markup'] .= '<br />';
+      $element[$i]['#markup'] .= t('Hours of work %t', array('%t' => $arr[2]));
+      $element[$i]['#markup'] .= '</div>';
+    }
+  }
+
+  return $element;
+}

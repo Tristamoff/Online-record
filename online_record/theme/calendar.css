@@ -1,0 +1,31 @@
+#task-count-info {
+    color: red;
+}
+.or-bg-changed{
+    background-color: #32FF0E;
+}
+.or-bg-green{
+    background-color: #B7FFB7;
+}
+.or-bg-red{
+    background-color: #FFA0A2;
+}
+.current-task {
+    background-image: url('myDay.png');
+}
+
+.spec-schedule td.free{
+    cursor: pointer;
+}
+
+#spec-time, #edit-or-date {
+    display: none;
+}
+
+
+#to-next-week:hover, #to-prev-week:hover {
+    text-decoration: underline;
+}
+#to-next-week, #to-prev-week {
+    cursor: pointer;
+}

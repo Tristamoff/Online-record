@@ -1,0 +1,16 @@
+name = Online record
+description = Online records for specialists.
+package = Records
+core = 7.x
+configure = admin/config/content/online_record
+
+dependencies[] = number
+dependencies[] = options
+dependencies[] = entityreference
+dependencies[] = views
+
+version = "7.x-1.0"
+core = "7.x"
+project = "online_record"
+datestamp = "1398963366"
+
