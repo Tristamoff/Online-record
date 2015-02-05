@@ -27,7 +27,6 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
       $start[] = (((int)$start_time_arr[0] * 60) + (int)$start_time_arr[1]);
       $end[] = (((int)$end_time_arr[0] * 60) + (int)$end_time_arr[1]);
     }
-
     $resp['start'] = min($start);//начало дня, в минутах
     $resp['end'] = max($end);//конец дня, в минутах
 
@@ -143,6 +142,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
     $lunch_st = ((int) $lunch_st[0] * 60) + (int) $lunch_st[1];
     $lunch_end = explode(':', $lunch_arr[1]);
     $lunch_end = ((int) $lunch_end[0] * 60) + (int) $lunch_end[1];
+    $day_rasp = array_values($resp['rasp']);
     while ($interval < $resp['end']) {
       $minutes = $interval % 60;
       $hours = ($interval - $minutes) / 60;
@@ -185,18 +185,18 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
             $rows[$step][$day_name]['data-date'] = $resp['days'][$td_num - 1] . '_' . $interval . '-' . ($interval + $resp['minute_deal']);
 
             //освобождаем согласно расписанию
-
             foreach ($day_intervals as $one_interval) {
               if (((int) $int_st >= (int) $one_interval[0]) && ((int) $int_end <= (int) $one_interval[1])) {
+                //выходные
+                if ($day_rasp[$td_num-1][0] == 'YES') {
+                  $rows[$step][$day_name]['data'] = '';
+                  $rows[$step][$day_name]['class'] = 'free';
+                }
                 //проверяем-нет ли в интервале занятого времени
-                $rows[$step][$day_name]['data'] = '';
-                $rows[$step][$day_name]['class'] = 'free';
-
                 if (isset($busy[$resp['days'][$td_num - 1]])) {
                   //в этот день что-то занимали
                   //перебираю все занятые куски в этот день
                   foreach ($busy[$resp['days'][$td_num - 1]] as $busy_ints) {
-
                     if (
                       (($int_st < $busy_ints[0]) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало интервала в свободное время, конец в занятом
                       ||
@@ -260,19 +260,19 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
       }
       $interval = $interval + $resp['minute_deal'];
     }
-
-    $table = $traslite . ' <span id="to-next-week">>></span>' . theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('spec-schedule'))));
+    $zag = $traslite . ' <span id="to-next-week">>></span>';
+    $table = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('spec-schedule'))));
     if ($plus > 0) {
-      $table = '<span id="to-prev-week"><<</span>' . $table;
+        $zag = '<span id="to-prev-week"><<</span>' . $zag;
     }
-    print $table . '<span id="spec-time">' . $resp['minute_deal'] . '</span>';
+
+    print '<div class="or-table-title">' . $zag . '</div>' . $table . '<span id="spec-time">' . $resp['minute_deal'] . '</span>';
   }
 }
 
 /**
  * Находит занятые дни.
  */
-// !добавить что занято тобой. для редактирования. надо ещё добавить аргумент редактируемой записи.
 function online_record_get_busy($spec_nid, $record_nid, $resp) {
   $or = db_or();
   foreach ($resp['days'] as $data) {
