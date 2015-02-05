@@ -147,25 +147,6 @@ function online_record_install() {
           ),
         ),
       ),
-/*
-      'settings' => array(
-        'target_type' => 'node',
-        'handler' => 'base',
-        'handler_settings' => array(
-          'target_bundles' => array('or_specialist'),
-          'sort' => array(
-            'type' => 'property',
-            'property' => 'title',
-            'direction' => 'ASC'
-          ),
-          'behaviors' => array(
-            'views-select-list' => array(
-              'status' => 0
-            )
-          ),
-        ),
-      ),
-      */
     )
   );
   field_create_instance(
@@ -203,7 +184,7 @@ function online_record_install() {
       ),
       'default_value' => array(
         array(
-          'value' => 1
+          'value' => 0
         )
       ),
       'required' => 1,

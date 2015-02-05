@@ -10,13 +10,13 @@ function online_record_settings($form, &$form_state){
   $defaults = array();
 
   $def_hours = array();
-  $def_hours[] = 'YES|Monday|9:00-12:00,13:00-18:00';
-  $def_hours[] = 'YES|Tuesday|9:00-12:00,13:00-18:00';
-  $def_hours[] = 'YES|Wednesday|9:00-12:00,13:00-18:00';
-  $def_hours[] = 'YES|Thursday|9:00-12:00,13:00-18:00';
-  $def_hours[] = 'YES|Friday|9:00-12:00,13:00-18:00';
-  $def_hours[] =  'NO|Saturday|9:00-12:00,13:00-18:00';
-  $def_hours[] =  'NO|Sunday|9:00-12:00,13:00-18:00';
+  $def_hours[] = 'YES|Monday|9:00-18:00';
+  $def_hours[] = 'YES|Tuesday|9:00-18:00';
+  $def_hours[] = 'YES|Wednesday|9:00-18:00';
+  $def_hours[] = 'YES|Thursday|9:00-18:00';
+  $def_hours[] = 'YES|Friday|9:00-18:00';
+  $def_hours[] =  'NO|Saturday|9:00-18:00';
+  $def_hours[] =  'NO|Sunday|9:00-18:00';
 
   // Праздники
   $def_hours[] =  'NO|Holiday|9:00-12:00,13:00-18:00';
@@ -26,6 +26,8 @@ function online_record_settings($form, &$form_state){
   $defaults['or_def_minutes'] = 20;
 
   $defaults['or_def_working'] = 1;
+
+  $defaults['or_def_lunch'] = '12:00-13:00';
 
   $default_settings = variable_get('or_default_settings', $defaults);
 
@@ -87,6 +89,12 @@ function online_record_settings($form, &$form_state){
     '#type' => 'textfield',
     '#title' => t('Default minutes for one task'),
     '#default_value' => $default_settings['or_def_minutes']
+  );
+
+  $form['or_def_lunch'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default lunch interval'),
+    '#default_value' => $default_settings['or_def_lunch']
   );
 
   $form['submit'] = array(
@@ -171,6 +179,7 @@ function online_record_settings_submit($form, &$form_state){
   }
   $settings['or_def_working'] = $form_state['values']['or_def_working'];
   $settings['or_def_minutes'] = $form_state['values']['or_def_minutes'];
+  $settings['or_def_lunch'] = $form_state['values']['or_def_lunch'];
   variable_set('or_default_settings', $settings);
   drupal_set_message('Online record settings saved');
 }

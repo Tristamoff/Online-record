@@ -136,8 +136,13 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
     $now_year = (int) date('Y');
     $now_month = (int) date('n');
     $now_day = (int) date('j');
-
-   //  print_r($busy);
+    $def_settings = variable_get('or_default_settings', array());
+    $lunch = $def_settings['or_def_lunch'];
+    $lunch_arr = explode('-', $lunch);
+    $lunch_st = explode(':', $lunch_arr[0]);//часы и минуты
+    $lunch_st = ((int) $lunch_st[0] * 60) + (int) $lunch_st[1];
+    $lunch_end = explode(':', $lunch_arr[1]);
+    $lunch_end = ((int) $lunch_end[0] * 60) + (int) $lunch_end[1];
     while ($interval < $resp['end']) {
       $minutes = $interval % 60;
       $hours = ($interval - $minutes) / 60;
@@ -145,110 +150,115 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
         $minutes = '0' . $minutes;
       }
 
-      $rows[$step] = array(
-        'time' => array(
-          'class' => 'time',
-          'data-row-num' => $step,
-          'data-time-interval' => $interval,
-          'data' => $hours . ':' . $minutes
-        ),
-      );
+      $int_perm = TRUE;
+      if (($interval < $lunch_st) && (($interval  + $resp['minute_deal']) <= $lunch_st)) {
+        //интервал до обеда
+      } elseif (($interval >= $lunch_end) && (($interval  + $resp['minute_deal']) > $lunch_end)) {
+        //интервал после обеда
+      } else {
+        //интервал зацепил обед
+        $int_perm = FALSE;
+      }
 
+      if ($int_perm) {
+        $rows[$step] = array(
+          'time' => array(
+            'class' => 'time',
+            'data-row-num' => $step,
+            'data-time-interval' => $interval,
+            'data' => $hours . ':' . $minutes
+          ),
+        );
 
-   //   echo "\n____________\n";
+        $int_st = $interval;
+        $int_end = $interval + $resp['minute_deal'];
+        $td_num = 1;
+        foreach ($intervals as $day_name => $day_intervals) {
+          if ($day_name != 'Holiday') {
+            $rows[$step][$day_name]['data-row-num'] = $step;
+            $rows[$step][$day_name]['data-td-num'] = $td_num;
+            $rows[$step][$day_name]['data-td-coor'] = $step . '_' . $td_num;
 
+            //по умолчанию всё занято
+            $rows[$step][$day_name]['data'] = 'X';
+            $rows[$step][$day_name]['class'] = 'busy busy-stop';
+            $rows[$step][$day_name]['data-date'] = $resp['days'][$td_num - 1] . '_' . $interval . '-' . ($interval + $resp['minute_deal']);
 
+            //освобождаем согласно расписанию
 
-      $int_st = $interval;
-      $int_end = $interval + $resp['minute_deal'];
-      $td_num = 1;
-      foreach ($intervals as $day_name => $day_intervals) {
-        if ($day_name != 'Holiday') {
-          $rows[$step][$day_name]['data-row-num'] = $step;
-          $rows[$step][$day_name]['data-td-num'] = $td_num;
-          $rows[$step][$day_name]['data-td-coor'] = $step . '_' . $td_num;
+            foreach ($day_intervals as $one_interval) {
+              if (((int) $int_st >= (int) $one_interval[0]) && ((int) $int_end <= (int) $one_interval[1])) {
+                //проверяем-нет ли в интервале занятого времени
+                $rows[$step][$day_name]['data'] = '';
+                $rows[$step][$day_name]['class'] = 'free';
 
-          //по умолчанию всё занято
-          $rows[$step][$day_name]['data'] = 'X';
-          $rows[$step][$day_name]['class'] = 'busy busy-stop';
-          $rows[$step][$day_name]['data-date'] = $resp['days'][$td_num-1] . '_' . $interval . '-' . ($interval + $resp['minute_deal']);
+                if (isset($busy[$resp['days'][$td_num - 1]])) {
+                  //в этот день что-то занимали
+                  //перебираю все занятые куски в этот день
+                  foreach ($busy[$resp['days'][$td_num - 1]] as $busy_ints) {
 
-          //освобождаем согласно расписанию
-
-          foreach ($day_intervals as $one_interval) {
-            if (((int)$int_st >= (int)$one_interval[0]) && ((int)$int_end <= (int)$one_interval[1])) {
-              //проверяем-нет ли в интервале занятого времени
-              $rows[$step][$day_name]['data'] = '';
-              $rows[$step][$day_name]['class'] = 'free';
-
-              if (isset($busy[$resp['days'][$td_num-1]])) {
-                //в этот день что-то занимали
-                //перебираю все занятые куски в этот день
-                foreach ($busy[$resp['days'][$td_num-1]] as $busy_ints) {
-
-                  if(
-                  (($int_st < $busy_ints[0]) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало интервала в свободное время, конец в занятом
-                    ||
-                  (($int_end > $busy_ints[1]) && (($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])))//начало в занятом участке. конец в свободном
-                    ||
-                  ((($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало и конец внутри занятого участка
-                    ||
-                  (($int_st <= $busy_ints[0]) && ($int_end >= $busy_ints[1])) //занятый участок внутри интервала
-                  )
-                  {
-                    //этот участок нельзя бронировать
-                    //echo "its are busy ".$busy_ints['rec_nid']." \n";
-                    if ($busy_ints['rec_nid'] == $record_nid) {
-                      //занято текущей заявкой
-                      $rows[$step][$day_name]['data'] = 'THIS';
-                      $rows[$step][$day_name]['class'] = 'free current-task';
-                    }
-                    else {
-                      //занято другими заявками
-                      $rows[$step][$day_name]['data'] = 'BUSY';
-                      $rows[$step][$day_name]['class'] = 'busy busy-default';
+                    if (
+                      (($int_st < $busy_ints[0]) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало интервала в свободное время, конец в занятом
+                      ||
+                      (($int_end > $busy_ints[1]) && (($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])))//начало в занятом участке. конец в свободном
+                      ||
+                      ((($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало и конец внутри занятого участка
+                      ||
+                      (($int_st <= $busy_ints[0]) && ($int_end >= $busy_ints[1])) //занятый участок внутри интервала
+                    ) {
+                      //этот участок нельзя бронировать
+                      //echo "its are busy ".$busy_ints['rec_nid']." \n";
+                      if ($busy_ints['rec_nid'] == $record_nid) {
+                        //занято текущей заявкой
+                        $rows[$step][$day_name]['data'] = 'THIS';
+                        $rows[$step][$day_name]['class'] = 'free current-task';
+                      }
+                      else {
+                        //занято другими заявками
+                        $rows[$step][$day_name]['data'] = 'BUSY';
+                        $rows[$step][$day_name]['class'] = 'busy busy-default';
+                      }
                     }
                   }
                 }
               }
             }
-          }
 
-          //print_r($rows[$step][$day_name]);
-          $expired = FALSE;
-          if ($resp['days'][$td_num-1] == date('Y-m-d')) {
-            //это сегодня
-            $expired = TRUE;
-          }
-          else {
-            $day_dates = explode('-', $resp['days'][$td_num-1]);
-
-            if ((int) $day_dates[0] < $now_year) {
-              //в предыдущем году
+            //print_r($rows[$step][$day_name]);
+            $expired = FALSE;
+            if ($resp['days'][$td_num - 1] == date('Y-m-d')) {
+              //это сегодня
               $expired = TRUE;
             }
             else {
-              if ((int) $day_dates[1] < $now_month) {
-                //в прошлом месяце
+              $day_dates = explode('-', $resp['days'][$td_num - 1]);
+
+              if ((int) $day_dates[0] < $now_year) {
+                //в предыдущем году
                 $expired = TRUE;
               }
-              else if (((int) $day_dates[1] == $now_month) && ((int) $day_dates[2] <= $now_day)) {
-                //в этом месяце сегодня или ранее
-                $expired = TRUE;
+              else {
+                if ((int) $day_dates[1] < $now_month) {
+                  //в прошлом месяце
+                  $expired = TRUE;
+                }
+                else if (((int) $day_dates[1] == $now_month) && ((int) $day_dates[2] <= $now_day)) {
+                  //в этом месяце сегодня или ранее
+                  $expired = TRUE;
+                }
               }
             }
-          }
 
-          if ($expired) {
-            $rows[$step][$day_name]['data'] = 'Expired';
-            $rows[$step][$day_name]['class'] = 'busy busy-expired';
+            if ($expired) {
+              $rows[$step][$day_name]['data'] = 'Expired';
+              $rows[$step][$day_name]['class'] = 'busy busy-expired';
+            }
           }
+          $td_num++;
         }
-        $td_num++;
+        $step++;
       }
-
       $interval = $interval + $resp['minute_deal'];
-      $step++;
     }
 
     $table = $traslite . ' <span id="to-next-week">>></span>' . theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('spec-schedule'))));
@@ -279,17 +289,13 @@ function online_record_get_busy($spec_nid, $record_nid, $resp) {
   $result = $q->execute();
   $busy = array();
   while ($r = $result->fetchAssoc()) {
-   // print_r($r);
     $arr_1 = explode('_', $r['or_date_value']);
     if (!isset($busy[$arr_1[0]])) {
       $busy[$arr_1[0]] = array();
     }
     $busy[$arr_1[0]][$arr_1[1]] = explode('-',$arr_1[1]);
     $busy[$arr_1[0]][$arr_1[1]]['rec_nid'] = $r['nid'];
-    //print_r($r);
   }
- // echo $record_nid;
- // print_r($busy);
   return $busy;
 }
 

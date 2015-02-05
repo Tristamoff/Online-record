@@ -23,16 +23,19 @@
             });
 
             function getSpecTable(spec_nid, step, record_nid, mode){
-                $.ajax({
-                    url: '/online_record/get_dates/' + spec_nid + '/' + record_nid + '/' + step,
-                    success: function(e){
-                        if (mode == 'add') {
-                          $('#edit-or-date-und-0-value').val('');
+                var c_tasks = parseInt($('#edit-or-tasks-count-und-0-value').val());
+                if(c_tasks > 0) {
+                    $.ajax({
+                        url: '/online_record/get_dates/' + spec_nid + '/' + record_nid + '/' + step,
+                        success: function(e){
+                            if (mode == 'add') {
+                                $('#edit-or-date-und-0-value').val('');
+                            }
+                            $('#for-calendar').html(e);
+                            $('#for-calendar').attr('data-plus', step);
                         }
-                        $('#for-calendar').html(e);
-                        $('#for-calendar').attr('data-plus', step);
-                    }
-                });
+                    });
+                }
             }
 
             //запрос на следующую неделю
