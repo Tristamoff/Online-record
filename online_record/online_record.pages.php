@@ -170,7 +170,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
 
           //по умолчанию всё занято
           $rows[$step][$day_name]['data'] = 'X';
-          $rows[$step][$day_name]['class'] = 'busy';
+          $rows[$step][$day_name]['class'] = 'busy busy-stop';
           $rows[$step][$day_name]['data-date'] = $resp['days'][$td_num-1] . '_' . $interval . '-' . ($interval + $resp['minute_deal']);
 
           //освобождаем согласно расписанию
@@ -206,7 +206,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
                     else {
                       //занято другими заявками
                       $rows[$step][$day_name]['data'] = 'BUSY';
-                      $rows[$step][$day_name]['class'] = 'busy';
+                      $rows[$step][$day_name]['class'] = 'busy busy-default';
                     }
                   }
                 }
