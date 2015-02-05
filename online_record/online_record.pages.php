@@ -241,7 +241,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
 
           if ($expired) {
             $rows[$step][$day_name]['data'] = 'Expired';
-            $rows[$step][$day_name]['class'] = 'busy';
+            $rows[$step][$day_name]['class'] = 'busy busy-expired';
           }
         }
         $td_num++;
