@@ -49,10 +49,10 @@ function online_record_form_alter(&$form, &$form_state, $form_id) {
     //только добавление
     if(is_null($form['nid']['#value'])) {
       $default_settings = variable_get('or_default_settings', array());
-	  if($default_settings == array()) {
-		drupal_set_message(t('Please, verify and save your default settings.'));
-		drupal_goto('admin/config/content/online_record');
-	  }
+      if($default_settings == array()) {
+        drupal_set_message(t('Please, verify and save your default settings.'));
+        drupal_goto('admin/config/content/online_record');
+      }
       if (isset($default_settings['or_def_working'])) {
         $form['or_is_working']['und']['#default_value'] = (bool) $default_settings['or_def_working'];
       }

@@ -8,6 +8,7 @@ dependencies[] = number
 dependencies[] = options
 dependencies[] = entityreference
 dependencies[] = views
+dependencies[] = date
 
 version = "7.x-1.0"
 core = "7.x"

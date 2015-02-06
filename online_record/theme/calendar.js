@@ -143,6 +143,7 @@
                     $(".spec-schedule td").removeClass('or-bg-red');
                 },
                 click: function() {
+                    //клик по ячейке
                     var start = 0;
                     var end = 0;
                     $('.spec-schedule td.or-bg-green').each(function (index) {
@@ -157,6 +158,21 @@
                         //можно забронировать эти часы
                         $(".spec-schedule td").removeClass('or-bg-changed');
                         $('#edit-or-date-und-0-value').val($('.spec-schedule th[data-td-num=' + $(this).attr('data-td-num') + ']').attr('data-day') + '_' + start + '-' + end);
+                      var time_st_min = start % 60;
+                      var time_st_h = (start - time_st_min) / 60;
+                      var time_en_min = end % 60;
+                      var time_en_h = (end - time_en_min) / 60;
+
+                      if (time_st_min < 10) {time_st_min = '0' + time_st_min;}
+                      if (time_en_min < 10) {time_en_min = '0' + time_en_min;}
+                      if (time_st_h < 10)   {time_st_h   = '0' + time_st_h;}
+                      if (time_en_h < 10)   {time_en_h   = '0' + time_en_h;}
+
+
+                      var date_arr = $('.spec-schedule th[data-td-num=' + $(this).attr('data-td-num') + ']').attr('data-day').split('-');
+
+                      $('#edit-or-hidden-date-und-0-value-date').val(date_arr[1] + '/' + date_arr[2] + '/' + date_arr[0] + ' - ' + time_st_h + ':' + time_st_min);
+                      $('#edit-or-hidden-date-und-0-value2-date').val(date_arr[1] + '/' +date_arr[2] + '/' + date_arr[0] + ' - ' + time_en_h + ':' + time_en_min);
                         $('.spec-schedule td.or-bg-green').each(function (index) {
                             $(this).removeClass('or-bg-green');
                             $(this).addClass('or-bg-changed');

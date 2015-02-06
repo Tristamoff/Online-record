@@ -18,7 +18,7 @@
     cursor: pointer;
 }
 
-#spec-time, #edit-or-date {
+#spec-time, #edit-or-date, .field-name-or-hidden-date {
     display: none;
 }
 
