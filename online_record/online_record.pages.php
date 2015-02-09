@@ -286,6 +286,7 @@ function online_record_get_busy($spec_nid, $record_nid, $resp) {
   $q->leftJoin('field_revision_or_specialist', 'os', 'os.revision_id=n.vid');
   $q->fields('os', array('or_specialist_target_id'));
   $q->condition('os.or_specialist_target_id', $spec_nid);
+  $q->condition('n.status', 1);
   $result = $q->execute();
   $busy = array();
   while ($r = $result->fetchAssoc()) {

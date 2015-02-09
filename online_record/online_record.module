@@ -140,6 +140,8 @@ function online_record_validate_free_intervals($form, &$form_state){
   $q->rightJoin('node', 'n', 'n.vid=od.revision_id');
   $q->leftJoin('field_revision_or_specialist', 'os', 'os.revision_id=n.vid');
   $q->condition('os.or_specialist_target_id', $specialist_nid);
+  $q->condition('n.status', 1);
+  $q->condition('n.vid', $form_state['values']['vid'], '!=');
   $q->fields('od', array('or_date_value'));
   $result = $q->execute();
   while ($r = $result->fetchAssoc()) {
