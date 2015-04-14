@@ -246,8 +246,16 @@ function online_record_holidays_settings($form, &$form_state) {
 }
 
 function online_record_holidays_settings_submit($form, &$form_state){
+	$day = $form_state['values']['day'];
+	$month = $form_state['values']['month'];
+	if ((int) $day < 10) {
+		$day = '0' . (int) $day;
+	}
+	if ((int) $month < 10) {
+		$month = '0' . (int) $month;
+	}
 	$q = db_insert('online_record_holidays')
-	->fields(array('description' => $form_state['values']['description'], 'date' => $form_state['values']['month'] . '_' . $form_state['values']['day']))
+	->fields(array('description' => $form_state['values']['description'], 'date' => $month . '_' . $day))
 	->execute();
 	drupal_set_message(t('Holiday added'));
 }
