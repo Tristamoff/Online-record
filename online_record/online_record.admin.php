@@ -183,3 +183,72 @@ function online_record_settings_submit($form, &$form_state){
   variable_set('or_default_settings', $settings);
   drupal_set_message('Online record settings saved');
 }
+
+function online_record_holidays_settings($form, &$form_state) {
+	
+	if(isset($_GET['delete'])) {
+		$q = db_delete('online_record_holidays')->condition('hid',(int) $_GET['delete'])->execute();
+	}
+	
+	$form = array();
+	$form['#suffix'] = '<div><small>Month.Day Description</small><br />';
+	$q = db_select('online_record_holidays', 'h')->fields('h', array('hid', 'date','description'))->execute()->fetchAllAssoc('date');
+	$holidays = array();
+	foreach ($q as $hol) {
+		$form['#suffix'] .= str_replace('_', '.', $hol->date) . ' <b>' . $hol->description . '</b> ' . l(t('Delete'), 'admin/config/content/online_record/holidays', array('query' => array('delete' => $hol->hid))) . '<br />';
+	}
+	$form['#suffix'] .= '</div>';
+	
+	$form['holiday'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('The holiday'),
+	);
+	$form['holiday']['description'] = array(
+		'#title' => t('Name of holiday'),
+		'#type' => 'textfield',
+	);
+	$days = array();
+	$i = 1;
+	while ($i<=31) {
+		$days[$i] = (string) $i;
+		$i++;
+	}
+	$form['holiday']['day'] = array(
+		'#title' => t('Day of holiday'),
+		'#type' => 'select',
+		'#options' => $days,
+	);
+	$form['holiday']['month'] = array(
+		'#title' => t('Month of holiday'),
+		'#type' => 'select',
+		'#options' => array(
+			1  => t('January'),
+			2  => t('February'),
+			3  => t('March'),
+			4  => t('April'),
+			5  => t('May'),
+			6  => t('June'),
+			7  => t('July'),
+			8  => t('August'),
+			9  => t('September'),
+			10 => t('October'),
+			11 => t('November'),
+			12 => t('December')
+		),
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit')
+	);
+	
+	return $form;
+}
+
+function online_record_holidays_settings_submit($form, &$form_state){
+	$q = db_insert('online_record_holidays')
+	->fields(array('description' => $form_state['values']['description'], 'date' => $form_state['values']['month'] . '_' . $form_state['values']['day']))
+	->execute();
+	drupal_set_message(t('Holiday added'));
+}
+

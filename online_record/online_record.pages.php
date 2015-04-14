@@ -102,8 +102,27 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
     }
     $resp['translite'] = $traslite;
 
-  //  print_r($resp);
-
+	//тянем праздники
+	$q = db_select('online_record_holidays', 'h')->fields('h', array('date','description'))->execute()->fetchAllAssoc('date');
+	$holidays = array();
+	foreach ($q as $hol) {
+		$holidays[str_replace('_', '-', $hol->date)] = $hol->description;
+	}
+	$hol_dates = array_keys($holidays);
+	foreach ($resp['days'] as $day_num => $day_date) {
+		foreach ($hol_dates as $hol_date) {
+			if(strpos($day_date, $hol_date)) {
+				$i = 0;
+				foreach ($resp['rasp'] as $k => $v) {
+					if($i == $day_num) {
+						$resp['rasp'][$k][0] = 'NO';
+					}
+					$i++;
+				}
+			}
+		}
+	}
+	
     $intervals = array();
     foreach ($resp['rasp'] as $day => $data) {
       $ints = explode(',', $data[2]);
@@ -143,6 +162,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
     $lunch_end = explode(':', $lunch_arr[1]);
     $lunch_end = ((int) $lunch_end[0] * 60) + (int) $lunch_end[1];
     $day_rasp = array_values($resp['rasp']);
+
     while ($interval < $resp['end']) {
       $minutes = $interval % 60;
       $hours = ($interval - $minutes) / 60;
@@ -193,6 +213,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
                   $rows[$step][$day_name]['class'] = 'free';
                 }
                 //проверяем-нет ли в интервале занятого времени
+				//print_r($busy[$resp['days'][$td_num - 1]]);
                 if (isset($busy[$resp['days'][$td_num - 1]])) {
                   //в этот день что-то занимали
                   //перебираю все занятые куски в этот день
@@ -205,6 +226,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
                       ((($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало и конец внутри занятого участка
                       ||
                       (($int_st <= $busy_ints[0]) && ($int_end >= $busy_ints[1])) //занятый участок внутри интервала
+					  /*проверяем праздники*/
                     ) {
                       //этот участок нельзя бронировать
                       //echo "its are busy ".$busy_ints['rec_nid']." \n";
