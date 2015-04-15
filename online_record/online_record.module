@@ -20,9 +20,9 @@ function online_record_menu() {
   );
   
    $items['admin/config/content/online_record/overview'] = array(
-		'title' => 'Main',
-		'weight' => 0,
-		'type' => MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'Main',
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
    );
   
   $items['admin/config/content/online_record/holidays'] = array(
@@ -30,6 +30,16 @@ function online_record_menu() {
     'description' => 'The holidays days.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('online_record_holidays_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'online_record.admin.php'
+  );
+
+  $items['admin/config/content/online_record/vacations'] = array(
+    'title' => 'The vacations',
+    'description' => 'The vacations days.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('online_record_vacations_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_LOCAL_TASK,
     'file' => 'online_record.admin.php'

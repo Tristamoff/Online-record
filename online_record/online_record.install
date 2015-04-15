@@ -276,25 +276,47 @@ function online_record_install() {
 }
 
 function online_record_update_7100() {
-	db_create_table('online_record_holidays', array(
-		'description' => 'Table for holidays dates.',
-		'fields' => array(
-		  'hid' => array(
-			'type' => 'serial',
-			'unsigned' => TRUE,
-			'not null' => TRUE
-		  ),
-		  'date' => array(
-			'type' => 'varchar',
-			'length' => '255',
-			'not null' => FALSE
-		  ),
-		  'description' => array(
-			'type' => 'varchar',
-			'length' => '255',
-			'not null' => FALSE
-		  ),
-		),
-		'primary key' => array('hid'),
-	));
+  db_create_table('online_record_holidays', array(
+    'description' => 'Table for holidays dates.',
+    'fields' => array(
+      'hid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'date' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE
+      ),
+      'description' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE
+      ),
+    ),
+    'primary key' => array('hid'),
+  ));
+}
+function online_record_update_7101() {
+  db_create_table('online_record_vacations', array(
+    'description' => 'Table for vacations dates.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'spec_id' => array(
+        'type' => 'int',
+        'not null' => FALSE
+      ),
+      'dates' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE
+      ),
+    ),
+    'primary key' => array('id'),
+  ));
 }

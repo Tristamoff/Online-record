@@ -102,27 +102,47 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
     }
     $resp['translite'] = $traslite;
 
-	//тянем праздники
-	$q = db_select('online_record_holidays', 'h')->fields('h', array('date','description'))->execute()->fetchAllAssoc('date');
-	$holidays = array();
-	foreach ($q as $hol) {
-		$holidays[str_replace('_', '-', $hol->date)] = $hol->description;
-	}
-	$hol_dates = array_keys($holidays);
-	foreach ($resp['days'] as $day_num => $day_date) {
-		foreach ($hol_dates as $hol_date) {
-			if(strpos($day_date, $hol_date)) {
-				$i = 0;
-				foreach ($resp['rasp'] as $k => $v) {
-					if($i == $day_num) {
-						$resp['rasp'][$k][0] = 'NO';
-					}
-					$i++;
-				}
-			}
-		}
-	}
-	
+    //тянем праздники
+    $q = db_select('online_record_holidays', 'h')->fields('h', array('date','description'))->execute()->fetchAllAssoc('date');
+    $holidays = array();
+    foreach ($q as $hol) {
+      $holidays[str_replace('_', '-', $hol->date)] = $hol->description;
+    }
+    $hol_dates = array_keys($holidays);
+    foreach ($resp['days'] as $day_num => $day_date) {
+      foreach ($hol_dates as $hol_date) {
+        if(strpos($day_date, $hol_date)) {
+          $i = 0;
+          foreach ($resp['rasp'] as $k => $v) {
+            if($i == $day_num) {
+              $resp['rasp'][$k][0] = 'NO';
+            }
+            $i++;
+          }
+        }
+      }
+    }
+
+    //тянем отпуска рабочих
+    $q = db_select('online_record_vacations', 'v')->fields('v', array('dates'))->condition('v.spec_id', $nid)->execute()->fetchAll();
+    foreach ($q as $vac) {
+      $vac_arr = explode('__', $vac->dates);
+      $vac_start = date("U", strtotime($vac_arr[0]));
+      $vac_end = date("U", strtotime($vac_arr[1]));
+      foreach ($resp['days'] as $day_num => $day_date) {
+        $day_u = date("U", strtotime($day_date));
+        if (($day_u >= $vac_start) && ($day_u <= $vac_end)) {
+          $i = 0;
+          foreach ($resp['rasp'] as $k => $v) {
+            if($i == $day_num) {
+              $resp['rasp'][$k][0] = 'NO';
+            }
+            $i++;
+          }
+        }
+      }
+    }
+
     $intervals = array();
     foreach ($resp['rasp'] as $day => $data) {
       $ints = explode(',', $data[2]);
@@ -213,7 +233,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
                   $rows[$step][$day_name]['class'] = 'free';
                 }
                 //проверяем-нет ли в интервале занятого времени
-				//print_r($busy[$resp['days'][$td_num - 1]]);
+                //print_r($busy[$resp['days'][$td_num - 1]]);
                 if (isset($busy[$resp['days'][$td_num - 1]])) {
                   //в этот день что-то занимали
                   //перебираю все занятые куски в этот день
@@ -226,7 +246,7 @@ function online_record_get_days($nid, $record_nid, $plus = 0) {
                       ((($int_st >= $busy_ints[0]) && ($int_st < $busy_ints[1])) && (($int_end > $busy_ints[0]) && ($int_end <= $busy_ints[1])))//начало и конец внутри занятого участка
                       ||
                       (($int_st <= $busy_ints[0]) && ($int_end >= $busy_ints[1])) //занятый участок внутри интервала
-					  /*проверяем праздники*/
+                    /*проверяем праздники*/
                     ) {
                       //этот участок нельзя бронировать
                       //echo "its are busy ".$busy_ints['rec_nid']." \n";

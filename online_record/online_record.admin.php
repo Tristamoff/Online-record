@@ -170,7 +170,6 @@ function online_record_settings_validate($form, &$form_state){
 }
 
 function online_record_settings_submit($form, &$form_state){
-  //dpm($form_state['values']);
   $settings = array();
   $i = 0;
   while ($i < 8) {
@@ -185,78 +184,147 @@ function online_record_settings_submit($form, &$form_state){
 }
 
 function online_record_holidays_settings($form, &$form_state) {
-	
-	if(isset($_GET['delete'])) {
-		$q = db_delete('online_record_holidays')->condition('hid',(int) $_GET['delete'])->execute();
-	}
-	
-	$form = array();
-	$form['#suffix'] = '<div><small>Month.Day Description</small><br />';
-	$q = db_select('online_record_holidays', 'h')->fields('h', array('hid', 'date','description'))->execute()->fetchAllAssoc('date');
-	$holidays = array();
-	foreach ($q as $hol) {
-		$form['#suffix'] .= str_replace('_', '.', $hol->date) . ' <b>' . $hol->description . '</b> ' . l(t('Delete'), 'admin/config/content/online_record/holidays', array('query' => array('delete' => $hol->hid))) . '<br />';
-	}
-	$form['#suffix'] .= '</div>';
-	
-	$form['holiday'] = array(
-		'#type' => 'fieldset',
-		'#title' => t('The holiday'),
-	);
-	$form['holiday']['description'] = array(
-		'#title' => t('Name of holiday'),
-		'#type' => 'textfield',
-	);
-	$days = array();
-	$i = 1;
-	while ($i<=31) {
-		$days[$i] = (string) $i;
-		$i++;
-	}
-	$form['holiday']['day'] = array(
-		'#title' => t('Day of holiday'),
-		'#type' => 'select',
-		'#options' => $days,
-	);
-	$form['holiday']['month'] = array(
-		'#title' => t('Month of holiday'),
-		'#type' => 'select',
-		'#options' => array(
-			1  => t('January'),
-			2  => t('February'),
-			3  => t('March'),
-			4  => t('April'),
-			5  => t('May'),
-			6  => t('June'),
-			7  => t('July'),
-			8  => t('August'),
-			9  => t('September'),
-			10 => t('October'),
-			11 => t('November'),
-			12 => t('December')
-		),
-	);
-	
-	$form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Submit')
-	);
-	
-	return $form;
+  if(isset($_GET['delete'])) {
+    db_delete('online_record_holidays')->condition('hid',(int) $_GET['delete'])->execute();
+  }
+  $form = array();
+  $form['#suffix'] = '<div><small>Month.Day Description</small><br />';
+  $q = db_select('online_record_holidays', 'h')->fields('h', array('hid', 'date','description'))->execute()->fetchAllAssoc('date');
+  foreach ($q as $hol) {
+    $form['#suffix'] .= str_replace('_', '.', $hol->date) . ' <b>' . $hol->description . '</b> ' . l(t('Delete'), 'admin/config/content/online_record/holidays', array('query' => array('delete' => $hol->hid))) . '<br />';
+  }
+  $form['#suffix'] .= '</div>';
+
+  $form['holiday'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('The holiday'),
+  );
+  $form['holiday']['description'] = array(
+    '#title' => t('Name of holiday'),
+    '#type' => 'textfield',
+  );
+  $days = array();
+  $i = 1;
+  while ($i<=31) {
+    $days[$i] = (string) $i;
+    $i++;
+  }
+  $form['holiday']['day'] = array(
+    '#title' => t('Day of holiday'),
+    '#type' => 'select',
+    '#options' => $days,
+  );
+  $form['holiday']['month'] = array(
+    '#title' => t('Month of holiday'),
+    '#type' => 'select',
+    '#options' => array(
+      1  => t('January'),
+      2  => t('February'),
+      3  => t('March'),
+      4  => t('April'),
+      5  => t('May'),
+      6  => t('June'),
+      7  => t('July'),
+      8  => t('August'),
+      9  => t('September'),
+      10 => t('October'),
+      11 => t('November'),
+      12 => t('December')
+    ),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit')
+  );
+
+  return $form;
 }
 
 function online_record_holidays_settings_submit($form, &$form_state){
-	$day = $form_state['values']['day'];
-	$month = $form_state['values']['month'];
-	if ((int) $day < 10) {
-		$day = '0' . (int) $day;
-	}
-	if ((int) $month < 10) {
-		$month = '0' . (int) $month;
-	}
-	$q = db_insert('online_record_holidays')
-	->fields(array('description' => $form_state['values']['description'], 'date' => $month . '_' . $day))
-	->execute();
-	drupal_set_message(t('Holiday added'));
+  $day = $form_state['values']['day'];
+  $month = $form_state['values']['month'];
+  if ((int) $day < 10) {
+    $day = '0' . (int) $day;
+  }
+  if ((int) $month < 10) {
+    $month = '0' . (int) $month;
+  }
+  db_insert('online_record_holidays')
+  ->fields(array('description' => $form_state['values']['description'], 'date' => $month . '_' . $day))
+  ->execute();
+  drupal_set_message(t('Holiday added'));
 }
 
+function online_record_vacations_settings($form, &$form_state) {
+  if(isset($_GET['delete'])) {
+    db_delete('online_record_vacations')->condition('id',(int) $_GET['delete'])->execute();
+  }
+
+  $form = array();
+
+  $options = array();
+  $form['#suffix'] = '<div><small>' . t('Specialist') . ' ' . t('vacation') . '</small><br />';
+  $q = db_select('node', 'n');
+  $q  ->fields('n', array('nid', 'title'));
+  $q->fields('v', array('dates', 'id'));
+  $q->condition('n.type', 'or_specialist');
+  $q->leftJoin('online_record_vacations', 'v', 'v.spec_id=n.nid');
+  $res = $q->execute();
+  while ($vac = $res->fetchAssoc()) {
+    $options[$vac['nid']] = check_plain($vac['title']);
+    if ($vac['dates']) {
+      $form['#suffix'] .= check_plain($vac['title']) . ' ' . str_replace('__', ' - ', $vac['dates']) . ' ' . l(t('Delete'), 'admin/config/content/online_record/vacations', array('query' => array('delete' => $vac['id']))) . '<br />';
+    }
+  }
+
+  $form['specialist'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#required' => TRUE,
+  );
+
+  $form['start'] = array(
+    '#type' => 'date',
+    '#date_timezone' => date_default_timezone(),
+    '#date_format' => 'Y-m-d',
+    '#date_year_range' => '-3:+3',
+    '#title' => t('Vacation start'),
+    '#required' => TRUE,
+  );
+  $form['end'] = array(
+    '#type' => 'date',
+    '#date_timezone' => date_default_timezone(),
+    '#date_format' => 'Y-m-d',
+    '#date_year_range' => '-3:+3',
+    '#title' => t('Vacation end'),
+    '#required' => TRUE,
+  );
+
+  if (module_exists('date_popup')) {
+    $form['start']['#type'] = 'date_popup';
+    $form['end']['#type'] = 'date_popup';
+  }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit')
+  );
+
+  return $form;
+}
+
+function online_record_vacations_settings_submit($form, &$form_state) {
+  if (!module_exists('date_popup')) {
+    $start = $form_state['values']['start']['year'] . '-' . $form_state['values']['start']['month'] . '-' . $form_state['values']['start']['day'];
+    $end = $form_state['values']['end']['year'] . '-' . $form_state['values']['end']['month'] . '-' . $form_state['values']['end']['day'];
+  } else {
+    $start = $form_state['values']['start'];
+    $end = $form_state['values']['end'];
+  }
+  $dates = $start . '__' . $end;
+  db_insert('online_record_vacations')
+    ->fields(array('spec_id' => $form_state['values']['specialist'], 'dates' => $dates))
+    ->execute();
+  drupal_set_message(t('Vacation added'));
+}
